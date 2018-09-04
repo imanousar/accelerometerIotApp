@@ -13,13 +13,17 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 
 public class MQTT {
 
 
     public MqttAndroidClient mqttAndroidClient;
 
-    final String serverUri = "tcp:/demo.thingsboard.io";
+    final String serverUri = "tcp://demo.thingsboard.io";
     private final String username = "jopnCbhK2Qy1eg58bMhJ";
     final String publishTopic = "v1/devices/me/telemetry";
 
@@ -54,6 +58,7 @@ public class MQTT {
     }
 
     public void connect(){
+
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setUserName(username);
@@ -63,6 +68,7 @@ public class MQTT {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     Log.w("Mqtt", "Successful connection to : " + serverUri);
+                    MainActivity.connected = true;
                 }
 
                 @Override
@@ -85,6 +91,24 @@ public class MQTT {
         }
     }
 
+
+    public void publish(float x, float y, float z) throws JSONException, UnsupportedEncodingException {
+        try {
+
+            JSONObject payload = new JSONObject();
+            payload.put("X Axis", String.format("%f", x));
+            payload.put("Y Axis", String.format("%f", y));
+            payload.put("Z Axis", String.format("%f", z));
+
+            MqttMessage message= new MqttMessage(payload.toString().getBytes());
+            Log.w("Mqtt", "Publishing...");
+            mqttAndroidClient.publish(publishTopic, message);
+
+        } catch (MqttException ex) {
+            System.err.println("Exception whilst publishing");
+            ex.printStackTrace();
+        }
+    }
 
 
 }

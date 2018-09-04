@@ -1,6 +1,5 @@
 package com.example.giannis.myapplication1;
 
-
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.Activity;
@@ -11,7 +10,15 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.util.Log;
 import android.widget.TextView;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONException;
+
+import java.io.UnsupportedEncodingException;
 
 public class MainActivity extends AppCompatActivity  implements SensorEventListener {
 
@@ -29,9 +36,11 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private float deltaZ = 0;
 
     private float vibrateThreshold = 0;
+    private static final String TAG="Giannis";
 
     private TextView currentX, currentY, currentZ, maxX, maxY, maxZ;
-
+    private MQTT mqtt;
+    static boolean connected = false;
     public Vibrator v;
 
     @Override
@@ -52,8 +61,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         }
 
         //initialize vibration
+        // not used currently
         v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
-
+        startMqtt();
     }
 
     public void initializeViews() {
@@ -70,12 +80,14 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mqtt.connect();
     }
 
     //onPause() unregister the accelerometer for stop listening the events
     protected void onPause() {
         super.onPause();
         sensorManager.unregisterListener(this);
+        mqtt.disconnect();
     }
 
     @Override
@@ -92,6 +104,28 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         displayCurrentValues();
         // display the max x,y,z accelerometer values
         displayMaxValues();
+
+
+        final float x1, y1, z1;
+        x1=event.values[0];
+        y1=event.values[1];
+        z1=event.values[2];
+        Log.d(TAG, "X:" + x1 + "\tY:" + y1 + "\tZ:" + z1);
+                if(connected){
+                try {
+                    mqtt.publish(x1, y1, z1);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+}
+        currentX = (TextView)findViewById(R.id.currentX);
+        currentY = (TextView)findViewById(R.id.currentY);
+        currentZ = (TextView)findViewById(R.id.currentZ);
+        currentX.setText(String.format("%f", event.values[0]));
+        currentY.setText(String.format("%f", event.values[1]));
+        currentZ.setText(String.format("%f", event.values[2]));
 
         // get the change of the x,y,z values of the accelerometer
         deltaX = Math.abs(lastX - event.values[0]);
@@ -135,5 +169,31 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             deltaZMax = deltaZ;
             maxZ.setText(Float.toString(deltaZMax));
         }
+    }
+
+    private void startMqtt() {
+        mqtt = new MQTT(getApplicationContext());
+        mqtt.setCallback(new MqttCallbackExtended() {
+            @Override
+            public void connectComplete(boolean b, String s) {
+
+            }
+
+            @Override
+            public void connectionLost(Throwable throwable) {
+
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
+                Log.w("Debug", mqttMessage.toString());
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
+        mqtt.connect();
     }
 }
