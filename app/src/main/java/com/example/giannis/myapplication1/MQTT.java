@@ -24,7 +24,7 @@ public class MQTT {
     public MqttAndroidClient mqttAndroidClient;
 
     final String serverUri = "tcp://demo.thingsboard.io";
-    private final String username = "jopnCbhK2Qy1eg58bMhJ";
+    private final String username = "rroaEAa4CD6fWpa0bFhd";
     final String publishTopic = "v1/devices/me/telemetry";
 
 
