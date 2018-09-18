@@ -23,9 +23,10 @@ public class MQTT {
 
     public MqttAndroidClient mqttAndroidClient;
 
-    final String serverUri = "tcp://demo.thingsboard.io";
-    private final String username = "rroaEAa4CD6fWpa0bFhd";
-    final String publishTopic = "v1/devices/me/telemetry";
+    final String serverUri = "tcp://chimpanzee.rmq.cloudamqp.com:1883";
+    private final String username = "uglyketc:uglyketc";
+    private final String password= "jRCfZsIvJiM0-UBkrW0IubTPwPAu4K6B";
+    final String publishTopic = "Tutorial/";
 
 
     public MQTT(Context context) {
@@ -62,6 +63,7 @@ public class MQTT {
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setUserName(username);
+        mqttConnectOptions.setPassword(password.toCharArray());
         try {
 
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
